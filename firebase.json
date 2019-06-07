@@ -1,0 +1,28 @@
+{
+  "hosting": {
+    "public": "public",
+    "rewrites" :[
+        {
+          "source": "/walmartproducts/**",
+          "function": "app"
+        },
+        {
+        "source": "/walmartproducts/:pageNumber/:pageSize",
+        "function": "app"
+        },
+        {
+          "source": "/images/**",
+          "function": "images"
+        },
+        {
+          "source": "/images/:imageName",
+          "function": "images"
+        }
+      ],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}
