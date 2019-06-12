@@ -50,14 +50,17 @@ exports.products_get_by_filter_conditions = (request, response, next) => {
             'inStock': queryParams.inStock
         });
     }
+
     // ReviewCount filtering
-    if (queryParams.minReviewCount > 0 && queryParams.maxReviewCount == undefined) {
+    if (queryParams.minReviewCount > 0 && (queryParams.maxReviewCount == undefined || 
+        queryParams.maxReviewCount == '')) {
         filters = Object.assign(filters, {
             'reviewCount': {
                 '$gte': queryParams.minReviewCount
             }
         });
-    } else if (queryParams.maxReviewCount > 0 && queryParams.minReviewCount == undefined) {
+    } else if (queryParams.maxReviewCount > 0 && (queryParams.minReviewCount == undefined || 
+        queryParams.minReviewCount == '')) {
         filters = Object.assign(filters, {
             'reviewCount': {
                 '$lte': queryParams.maxReviewCount
@@ -72,13 +75,15 @@ exports.products_get_by_filter_conditions = (request, response, next) => {
         });
     }
     // ReviewRating filtering
-    if (queryParams.minReviewRating > 0 && queryParams.maxReviewRating == undefined) {
+    if (queryParams.minReviewRating > 0 && (queryParams.maxReviewRating == undefined || 
+        queryParams.maxReviewRating == '')) {
         filters = Object.assign(filters, {
             'reviewRating': {
                 '$gte': queryParams.minReviewRating
             }
         });
-    } else if (queryParams.maxReviewRating > 0 && queryParams.minReviewRating == undefined) {
+    } else if (queryParams.maxReviewRating > 0 && (queryParams.minReviewRating == undefined || 
+        queryParams.minReviewRating == '')) {
         filters = Object.assign(filters, {
             'reviewRating': {
                 '$lte': queryParams.maxReviewRating
@@ -93,13 +98,14 @@ exports.products_get_by_filter_conditions = (request, response, next) => {
         });
     }
     // Price filtering
-    if (queryParams.minPrice > 0 && queryParams.maxPrice == undefined) {
+    if (queryParams.minPrice > 0 && (queryParams.maxPrice == undefined || 
+        queryParams.maxPrice == '')) {
         filters = Object.assign(filters, {
             'price': {
                 '$gte': queryParams.minPrice
             }
         });
-    } else if (queryParams.maxPrice > 0 && queryParams.minPrice == undefined) {
+    } else if (queryParams.maxPrice > 0 && (queryParams.minPrice == undefined || queryParams.minPrice == '')) {
         filters = Object.assign(filters, {
             'price': {
                 '$lte': queryParams.maxPrice
@@ -158,15 +164,38 @@ exports.products_get_by_filter_conditions = (request, response, next) => {
             error.validUrl = 'https://mobile-tha-server-8ba57.firebaseapp.com/walmartproducts/{pageNumber}/{pageSize}';
             next(error);
         });
+}
 
-    async function totalRecordsCount(Product) {
-        var totalProducts;
-        await Product.find({}).then(docs => {
-            Product.countDocuments({}).then(number => {
-                totalProducts = JSON.stringify(number);
+exports.products_get_by_productid = (request, response) => {
+    var productId = request.params.productId;
+
+    Product.find({ productId : productId }, null, null)
+    .exec((error, productDocs) => {
+
+        if (error) {
+            response.status(400).json({
+                message: 'Product information not found for id: ' + productId
             });
-        })
-
-        return totalProducts;
-    }
+        }
+        // Customize the response to be shown up in the JSON response
+        const docResponse = productDocs.map(doc => {
+            const priceVal = doc.price.toFixed(2);
+            return {
+                productId: doc.productId,
+                productName: doc.productName,
+                shortDescription: doc.shortDescription,
+                longDescription: doc.longDescription,
+                price: String("$").concat(priceVal),
+                productImage: doc.productImage,
+                reviewRating: doc.reviewRating,
+                reviewCount: doc.reviewCount,
+                inStock: doc.inStock
+            }
+        });
+        response.status(200).json({
+            products: docResponse,
+            statusCode: 200
+        });
+    });
+   
 }
